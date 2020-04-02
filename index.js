@@ -2,6 +2,9 @@ class GemPuzzle {
   constructor(side) {
     this.side = side;
     this.zero = null;
+    this.turnCount = 0;
+    this.checker = 0;
+    this.paused = false;
   }
 
 
@@ -20,8 +23,8 @@ class GemPuzzle {
           gem.setAttribute('id', `${i}${j}`);
         }
         this.setPosition(gem);
-        gem.style.width = `${100 / this.side}%`;
-        gem.style.height = `${100 / this.side}%`;
+        gem.style.width = `${100 / this.side - 1}%`;
+        gem.style.height = `${100 / this.side - 1}%`;
         document.querySelector('.square').append(gem);
       }
     }
@@ -50,20 +53,43 @@ class GemPuzzle {
   }
 
   swapPosition() {
-    document.querySelector('.square').addEventListener('mousedown', (event) => {
-      if (event.target.className.includes('moveable')) {
-        const zeroData = this.zero.getAttribute('data'); const
-          moveGemData = event.target.getAttribute('data');
-        event.target.setAttribute('data', zeroData);
-        this.zero.setAttribute('data', moveGemData);
-        document.querySelectorAll('.moveable').forEach((item) => {
-          item.classList.remove('moveable');
-        });
-        this.findRemovable();
-        this.setPosition(this.zero);
-        this.setPosition(event.target);
+    if (!this.paused) {
+      document.querySelector('.square').addEventListener('mousedown', (event) => {
+        if (event.target.className.includes('moveable')) {
+          const zeroData = this.zero.getAttribute('data');
+          const moveGemData = event.target.getAttribute('data');
+
+          event.target.setAttribute('data', zeroData);
+          this.zero.setAttribute('data', moveGemData);
+          document.querySelectorAll('.moveable').forEach((item) => {
+            item.classList.remove('moveable');
+          });
+          this.findRemovable();
+          this.setPosition(this.zero);
+          this.setPosition(event.target);
+          this.turnCount += 1;
+          this.checkWin();
+        }
+      });
+    }
+  }
+
+  checkWin() {
+    document.querySelectorAll('.gem').forEach((gem) => {
+      if (gem !== this.zero) {
+        if (gem.getAttribute('data') === gem.id) {
+          this.checker += 1;
+        }
       }
     });
+
+    if (this.checker !== (this.side ** 2) - 1) {
+      this.checker = 0;
+    } else {
+      alert(`${this.turnCount} turns`);
+      this.checker = 0;
+      this.turnCount = 0;
+    }
   }
 }
 

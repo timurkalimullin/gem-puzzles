@@ -1,2 +1,2 @@
-.square{position:relative;margin:auto auto;width:400px;height:400px;border:2px solid orange}.square .gem{position:absolute;outline:2px solid green;-webkit-transition:.5s all;transition:.5s all}.square .moveable{background-color:palegreen}
+.square{position:relative;margin:auto auto;width:400px;height:400px;border:2px solid orange;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.square .gem{position:absolute;outline:1px solid green;-webkit-transition:.5s all;transition:.5s all}.square #zero.gem{outline:none}.square .moveable{background-color:palegreen}
 /*# sourceMappingURL=style.min.css.map */
