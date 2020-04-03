@@ -1,6 +1,14 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    position: relative;
+}
+
 .square{
     position: relative;
-    margin: auto auto;
+    margin: 0 auto;
+    margin-top: 10%;
     width: 400px;
     height: 400px;
     border: 2px solid orange;
@@ -16,5 +24,11 @@
     .moveable{
         background-color: palegreen;
     }
+}
+
+.restartBtn, .pauseBtn{
+    width: 100px;
+    height: 60px;
+    border: 2px solid red;
 }
 

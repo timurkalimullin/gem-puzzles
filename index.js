@@ -5,31 +5,42 @@ class GemPuzzle {
     this.turnCount = 0;
     this.checker = 0;
     this.paused = false;
+    this.gameStart = false;
   }
 
 
-  createField() {
-    for (let i = 1; i <= 4; i += 1) {
+  static createField() {
+    for (let i = 1; i <= 5; i += 1) {
       const div = document.createElement('div');
-
       switch (i) {
         case 1:
           div.classList.add('square');
+          document.body.append(div);
           break;
         case 2:
-          div.classList.add('restartBtn');
+          div.classList.add('interfaceContainer');
+          document.body.append(div);
           break;
         case 3:
-          div.classList.add('pauseBtn');
+          div.classList.add('restartBtn');
+          div.innerHTML = 'RESTART';
+          document.querySelector('.interfaceContainer').append(div);
           break;
         case 4:
-          div.classList.add('timer');
+          div.classList.add('pauseBtn');
+          div.innerHTML = 'PAUSE';
+          document.querySelector('.interfaceContainer').append(div);
           break;
+        case 5:
+          div.classList.add('timer');
+          document.querySelector('.interfaceContainer').append(div);
+          break;
+        default:
       }
-    document.body.append(div);
     }
-    
+  }
 
+  createGems() {
     for (let i = 0; i < this.side; i += 1) {
       for (let j = 0; j < this.side; j += 1) {
         const gem = document.createElement('div');
@@ -49,6 +60,7 @@ class GemPuzzle {
         document.querySelector('.square').append(gem);
       }
     }
+    this.gameStart = true;
   }
 
   findRemovable() {
@@ -83,20 +95,13 @@ class GemPuzzle {
     });
   }
 
-  swapPosition() {
+  swapPosition(event) {
+    this.swapData(event.target);
     this.findRemovable();
-    if (!this.paused) {
-      document.querySelector('.square').addEventListener('mousedown', (event) => {
-        if (event.target.className.includes('moveable')) {
-          this.swapData(event.target);
-          this.findRemovable();
-          this.setPosition(this.zero);
-          this.setPosition(event.target);
-          this.turnCount += 1;
-          this.checkWin();
-        }
-      });
-    }
+    this.setPosition(this.zero);
+    this.setPosition(event.target);
+    this.turnCount += 1;
+    this.checkWin();
   }
 
   checkWin() {
@@ -131,9 +136,39 @@ class GemPuzzle {
       removableGems = [];
     }
   }
+
+  restart() {
+    this.shuffleGems();
+    this.findRemovable();
+    this.paused = false;
+    this.gameStart = false;
+  }
+
+  pause() {
+    this.paused = !this.paused;
+  }
+
+  listeners() {
+    const restart = document.querySelector('.restartBtn');
+    const pause = document.querySelector('.pauseBtn');
+    window.addEventListener('mousedown', (event) => {
+      if (event.target === restart) {
+        this.restart();
+      }
+      if (event.target === pause) {
+        this.pause();
+      }
+      if (!this.paused && !this.gameStart) {
+        if (event.target.className.includes('moveable')) {
+          this.swapPosition(event);
+        }
+      }
+    });
+  }
 }
 
 const gemGame = new GemPuzzle(3);
-gemGame.createField();
+GemPuzzle.createField();
+gemGame.createGems();
 gemGame.findRemovable();
-gemGame.swapPosition();
+gemGame.listeners();
