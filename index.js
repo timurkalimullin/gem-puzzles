@@ -9,6 +9,27 @@ class GemPuzzle {
 
 
   createField() {
+    for (let i = 1; i <= 4; i += 1) {
+      const div = document.createElement('div');
+
+      switch (i) {
+        case 1:
+          div.classList.add('square');
+          break;
+        case 2:
+          div.classList.add('restartBtn');
+          break;
+        case 3:
+          div.classList.add('pauseBtn');
+          break;
+        case 4:
+          div.classList.add('timer');
+          break;
+      }
+    document.body.append(div);
+    }
+    
+
     for (let i = 0; i < this.side; i += 1) {
       for (let j = 0; j < this.side; j += 1) {
         const gem = document.createElement('div');
@@ -52,18 +73,22 @@ class GemPuzzle {
     elem.style.top = `${topShift}%`;
   }
 
+  swapData(gem) {
+    const zeroData = this.zero.getAttribute('data'); const
+      currentData = gem.getAttribute('data');
+    gem.setAttribute('data', zeroData);
+    this.zero.setAttribute('data', currentData);
+    document.querySelectorAll('.moveable').forEach((item) => {
+      item.classList.remove('moveable');
+    });
+  }
+
   swapPosition() {
+    this.findRemovable();
     if (!this.paused) {
       document.querySelector('.square').addEventListener('mousedown', (event) => {
         if (event.target.className.includes('moveable')) {
-          const zeroData = this.zero.getAttribute('data');
-          const moveGemData = event.target.getAttribute('data');
-
-          event.target.setAttribute('data', zeroData);
-          this.zero.setAttribute('data', moveGemData);
-          document.querySelectorAll('.moveable').forEach((item) => {
-            item.classList.remove('moveable');
-          });
+          this.swapData(event.target);
           this.findRemovable();
           this.setPosition(this.zero);
           this.setPosition(event.target);
@@ -91,9 +116,24 @@ class GemPuzzle {
       this.turnCount = 0;
     }
   }
+
+  shuffleGems() {
+    for (let i = 1; i <= this.side ** 3; i += 1) {
+      let removableGems = [];
+      document.querySelectorAll('.moveable').forEach((item) => {
+        removableGems.push(item);
+      });
+      const currentMove = removableGems[Math.floor(Math.random() * (removableGems.length))];
+      this.swapData(currentMove);
+      this.setPosition(currentMove);
+      this.setPosition(this.zero);
+      this.findRemovable();
+      removableGems = [];
+    }
+  }
 }
 
-const gemGame = new GemPuzzle(4);
+const gemGame = new GemPuzzle(3);
 gemGame.createField();
 gemGame.findRemovable();
 gemGame.swapPosition();
