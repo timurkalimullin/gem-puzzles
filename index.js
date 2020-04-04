@@ -6,11 +6,14 @@ class GemPuzzle {
     this.checker = 0;
     this.paused = false;
     this.gameStart = false;
+    this.timer = 0;
+    this.min = 0;
+    this.sec = 0;
   }
 
 
   static createField() {
-    for (let i = 1; i <= 5; i += 1) {
+    for (let i = 1; i <= 6; i += 1) {
       const div = document.createElement('div');
       switch (i) {
         case 1:
@@ -35,6 +38,10 @@ class GemPuzzle {
           div.classList.add('timer');
           document.querySelector('.interfaceContainer').append(div);
           break;
+        case 6:
+          div.classList.add('turns-count');
+          div.innerHTML = '0';
+          document.querySelector('.interfaceContainer').append(div);
         default:
       }
     }
@@ -101,6 +108,7 @@ class GemPuzzle {
     this.setPosition(this.zero);
     this.setPosition(event.target);
     this.turnCount += 1;
+    document.querySelector('.turns-count').innerHTML = this.turnCount;
     this.checkWin();
   }
 
@@ -117,8 +125,7 @@ class GemPuzzle {
       this.checker = 0;
     } else {
       alert(`${this.turnCount} turns`);
-      this.checker = 0;
-      this.turnCount = 0;
+      this.restart();
     }
   }
 
@@ -142,6 +149,8 @@ class GemPuzzle {
     this.findRemovable();
     this.paused = false;
     this.gameStart = false;
+    this.turnCount = 0;
+    document.querySelector('.turns-count').innerHTML = '0';
   }
 
   pause() {
@@ -165,6 +174,7 @@ class GemPuzzle {
       }
     });
   }
+
 }
 
 const gemGame = new GemPuzzle(3);
@@ -172,3 +182,12 @@ GemPuzzle.createField();
 gemGame.createGems();
 gemGame.findRemovable();
 gemGame.listeners();
+
+
+
+
+
+
+
+
+
