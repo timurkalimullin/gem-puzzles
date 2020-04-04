@@ -9,6 +9,7 @@ class GemPuzzle {
     this.timer = 0;
     this.min = 0;
     this.sec = 0;
+    this.timeId = null;
   }
 
 
@@ -37,11 +38,13 @@ class GemPuzzle {
         case 5:
           div.classList.add('timer');
           document.querySelector('.interfaceContainer').append(div);
+          div.innerHTML = '0 minutes 0 seconds';
           break;
         case 6:
           div.classList.add('turns-count');
           div.innerHTML = '0';
           document.querySelector('.interfaceContainer').append(div);
+          break;
         default:
       }
     }
@@ -125,7 +128,8 @@ class GemPuzzle {
       this.checker = 0;
     } else {
       alert(`${this.turnCount} turns`);
-      this.restart();
+      this.gameStart = true;
+      this.pause();
     }
   }
 
@@ -145,16 +149,39 @@ class GemPuzzle {
   }
 
   restart() {
+    this.resetTimer();
     this.shuffleGems();
     this.findRemovable();
     this.paused = false;
     this.gameStart = false;
     this.turnCount = 0;
     document.querySelector('.turns-count').innerHTML = '0';
+    this.startTimer();
   }
 
   pause() {
-    this.paused = !this.paused;
+    if (!this.gameStart) {
+      this.paused = !this.paused;
+    }
+  }
+
+  startTimer() {
+    this.timeId = setInterval(() => {
+      if (!this.paused && !this.gameStart) {
+        this.timer += 1;
+        this.sec = this.timer % 60;
+        this.min = parseInt(this.timer / 60, 10);
+        document.querySelector('.timer').innerHTML = `${this.min} minutes ${this.sec} seconds`;
+      }
+    }, 1000);
+  }
+
+  resetTimer() {
+    clearInterval(this.timeId);
+    this.timer = 0;
+    this.sec = 0;
+    this.min = 0;
+    document.querySelector('.timer').innerHTML = `${this.min} minutes ${this.sec} seconds`;
   }
 
   listeners() {
@@ -174,7 +201,6 @@ class GemPuzzle {
       }
     });
   }
-
 }
 
 const gemGame = new GemPuzzle(3);
@@ -182,12 +208,3 @@ GemPuzzle.createField();
 gemGame.createGems();
 gemGame.findRemovable();
 gemGame.listeners();
-
-
-
-
-
-
-
-
-
