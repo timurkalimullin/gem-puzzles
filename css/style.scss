@@ -24,6 +24,19 @@
     .moveable{
         background-color: palegreen;
     }
+    .pauseModal{
+      width: 100%;
+      height: 100%;
+      background-color: rgba($color: #000000, $alpha: 0.5);
+      font-size: 7vw;
+      text-align: center;
+      padding-top: 30%;
+      color: #75dee3;
+      z-index: 5;
+    }
+    .pauseModal.hidden{
+      display: none;
+    }
 }
 
 .restartBtn, .pauseBtn, .saveBtn, .loadBtn, .scoreBtn{

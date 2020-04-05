@@ -88,6 +88,14 @@ class GemPuzzle {
     this.gameStart = true;
   }
 
+  createModal() {
+    const pauseModal = document.createElement('div');
+    pauseModal.classList.add('pauseModal');
+    pauseModal.classList.add('hidden');
+    pauseModal.innerHTML = 'PAUSE';
+    document.querySelector('.square').append(pauseModal);
+  }
+
   findRemovable() {
     this.zero = document.querySelector('#zero');
     const a = Number(this.zero.getAttribute('data').slice(0, 1));
@@ -143,6 +151,7 @@ class GemPuzzle {
       this.checker = 0;
     } else {
       alert(`${this.turnCount} turns`);
+      this.writeScore();
       this.gameStart = true;
       this.pause();
     }
@@ -168,8 +177,9 @@ class GemPuzzle {
     this.shuffleGems();
     this.findRemovable();
     this.gameStart = false;
-    this.paused = true;
-    this.pause();
+    if (this.paused === true) {
+      this.pause();
+    }
     this.turnCount = 0;
     document.querySelector('.turns-count').innerHTML = '0';
     this.startTimer();
@@ -178,6 +188,7 @@ class GemPuzzle {
   pause() {
     if (!this.gameStart) {
       this.paused = !this.paused;
+      document.querySelector('.pauseModal').classList.toggle('hidden');
     }
   }
 
@@ -249,6 +260,9 @@ class GemPuzzle {
 
   load() {
     this.gameStart = false;
+    if (this.paused) {
+      this.pause();
+    }
     this.resetTimer();
     this.startTimer();
     this.timer = Number(window.localStorage.time);
@@ -284,6 +298,27 @@ class GemPuzzle {
   showScore() {
     if (!window.localStorage.score) {
       alert('No data yet!');
+    } else {
+      alert(window.localStorage.score);
+    }
+  }
+
+  writeScore() {
+    if (!window.localStorage.score) {
+      window.localStorage.score = JSON.stringify({
+        1: {
+          turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
+        },
+      });
+    } else {
+      const scoreLocal = JSON.parse(window.localStorage.score);
+      const keyMax = Math.max.apply(null, Object.keys(scoreLocal));
+      scoreLocal[keyMax + 1] = {
+        [keyMax + 1]: {
+          turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
+        },
+      };
+      window.localStorage.score = JSON.stringify(scoreLocal);
     }
   }
 }
@@ -291,5 +326,6 @@ class GemPuzzle {
 const gemGame = new GemPuzzle(3);
 GemPuzzle.createField();
 gemGame.createGems();
+gemGame.createModal();
 gemGame.findRemovable();
 gemGame.listeners();
