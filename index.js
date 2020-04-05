@@ -10,6 +10,7 @@ class GemPuzzle {
     this.min = 0;
     this.sec = 0;
     this.timeId = null;
+    this.winnerName = null;
   }
 
 
@@ -94,6 +95,11 @@ class GemPuzzle {
     pauseModal.classList.add('hidden');
     pauseModal.innerHTML = 'PAUSE';
     document.querySelector('.square').append(pauseModal);
+
+    const winModal = document.createElement('div');
+    winModal.classList.add('winModal');
+    winModal.classList.add('hidden');
+    document.body.append(winModal);
   }
 
   findRemovable() {
@@ -150,7 +156,9 @@ class GemPuzzle {
     if (this.checker !== (this.side ** 2) - 1) {
       this.checker = 0;
     } else {
-      alert(`${this.turnCount} turns`);
+      this.winnerName = prompt('Enter your name:');
+      document.querySelector('.winModal').classList.remove('hidden');
+      document.querySelector('.winModal').innerHTML = `Congratulations, ${this.winnerName}! You win!<br>Your turns: ${this.turnCount}<br>Your time: ${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`;
       this.writeScore();
       this.gameStart = true;
       this.pause();
@@ -307,7 +315,7 @@ class GemPuzzle {
     if (!window.localStorage.score) {
       window.localStorage.score = JSON.stringify({
         1: {
-          turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
+          name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
         },
       });
     } else {
@@ -315,7 +323,7 @@ class GemPuzzle {
       const keyMax = Math.max.apply(null, Object.keys(scoreLocal));
       scoreLocal[keyMax + 1] = {
         [keyMax + 1]: {
-          turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
+          name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
         },
       };
       window.localStorage.score = JSON.stringify(scoreLocal);

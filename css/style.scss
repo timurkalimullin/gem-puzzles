@@ -45,3 +45,20 @@
     border: 2px solid red;
 }
 
+.winModal{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba($color: #000000, $alpha: 0.5);
+  font-size: 4vw;
+  text-align: center;
+  padding-top: 30%;
+  color: #75dee3;
+  z-index: 5;
+}
+.winModal.hidden{
+  display: none;
+}
+
