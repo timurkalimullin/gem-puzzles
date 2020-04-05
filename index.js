@@ -14,7 +14,7 @@ class GemPuzzle {
 
 
   static createField() {
-    for (let i = 1; i <= 6; i += 1) {
+    for (let i = 1; i <= 9; i += 1) {
       const div = document.createElement('div');
       switch (i) {
         case 1:
@@ -43,6 +43,21 @@ class GemPuzzle {
         case 6:
           div.classList.add('turns-count');
           div.innerHTML = '0';
+          document.querySelector('.interfaceContainer').append(div);
+          break;
+        case 7:
+          div.classList.add('saveBtn');
+          div.innerHTML = 'SAVE';
+          document.querySelector('.interfaceContainer').append(div);
+          break;
+        case 8:
+          div.classList.add('loadBtn');
+          div.innerHTML = 'LOAD';
+          document.querySelector('.interfaceContainer').append(div);
+          break;
+        case 9:
+          div.classList.add('scoreBtn');
+          div.innerHTML = 'SCORE';
           document.querySelector('.interfaceContainer').append(div);
           break;
         default:
@@ -152,8 +167,9 @@ class GemPuzzle {
     this.resetTimer();
     this.shuffleGems();
     this.findRemovable();
-    this.paused = false;
     this.gameStart = false;
+    this.paused = true;
+    this.pause();
     this.turnCount = 0;
     document.querySelector('.turns-count').innerHTML = '0';
     this.startTimer();
@@ -187,6 +203,9 @@ class GemPuzzle {
   listeners() {
     const restart = document.querySelector('.restartBtn');
     const pause = document.querySelector('.pauseBtn');
+    const save = document.querySelector('.saveBtn');
+    const load = document.querySelector('.loadBtn');
+    const score = document.querySelector('.scoreBtn');
     window.addEventListener('mousedown', (event) => {
       if (event.target === restart) {
         this.restart();
@@ -199,7 +218,73 @@ class GemPuzzle {
           this.swapPosition(event);
         }
       }
+
+      if (event.target === save) {
+        this.save();
+      }
+
+      if (event.target === load) {
+        this.load();
+      }
+
+      if (event.target === score) {
+        this.showScore();
+      }
     });
+  }
+
+  save() {
+    if (!this.gameStart) {
+      let positionList = [...document.querySelectorAll('.gem')];
+      positionList = positionList.map((el) => ({
+        id: el.getAttribute('id'),
+        data: el.getAttribute('data'),
+        style: el.style,
+      }));
+      window.localStorage.setItem('positionList', JSON.stringify(positionList));
+      window.localStorage.setItem('turns', this.turnCount);
+      window.localStorage.setItem('time', this.timer);
+    }
+  }
+
+  load() {
+    this.gameStart = false;
+    this.resetTimer();
+    this.startTimer();
+    this.timer = Number(window.localStorage.time);
+    document.querySelector('.timer').innerHTML = `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`;
+    this.turnCount = Number(window.localStorage.turns);
+    document.querySelector('.turns-count').innerHTML = this.turnCount;
+    document.querySelectorAll('.gem').forEach((el) => {
+      el.remove();
+    });
+    const positionList = JSON.parse(window.localStorage.positionList);
+    positionList.forEach((el, i) => {
+      const gem = document.createElement('div');
+      gem.classList.add('gem');
+      gem.setAttribute('data', el.data);
+      if (i !== this.side ** 2 - 1) {
+        gem.innerHTML = `<span>${i + 1}</span>`;
+      } else {
+        gem.innerHTML = '<span></span>';
+      }
+      if (i !== this.side ** 2 - 1) {
+        gem.setAttribute('id', el.id);
+      } else {
+        gem.setAttribute('id', 'zero');
+      }
+      gem.style.width = `${100 / this.side - 1}%`;
+      gem.style.height = `${100 / this.side - 1}%`;
+      this.setPosition(gem);
+      document.querySelector('.square').append(gem);
+    });
+    this.findRemovable();
+  }
+
+  showScore() {
+    if (!window.localStorage.score) {
+      alert('No data yet!');
+    }
   }
 }
 
