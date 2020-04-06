@@ -1,6 +1,6 @@
 class GemPuzzle {
-  constructor(side) {
-    this.side = side;
+  constructor() {
+    this.side = 3;
     this.zero = null;
     this.turnCount = 0;
     this.checker = 0;
@@ -27,23 +27,23 @@ class GemPuzzle {
           document.body.append(div);
           break;
         case 3:
-          div.classList.add('restartBtn');
-          div.innerHTML = 'RESTART';
-          document.querySelector('.interfaceContainer').append(div);
-          break;
-        case 4:
-          div.classList.add('pauseBtn');
-          div.innerHTML = 'PAUSE';
-          document.querySelector('.interfaceContainer').append(div);
-          break;
-        case 5:
           div.classList.add('timer');
           document.querySelector('.interfaceContainer').append(div);
           div.innerHTML = '0 minutes 0 seconds';
           break;
-        case 6:
+        case 4:
           div.classList.add('turns-count');
-          div.innerHTML = '0';
+          div.innerHTML = 'Turns : 0';
+          document.querySelector('.interfaceContainer').append(div);
+        break;
+        case 5:
+          div.classList.add('restartBtn');
+          div.innerHTML = 'RESTART';
+          document.querySelector('.interfaceContainer').append(div);
+          break;
+        case 6:
+          div.classList.add('pauseBtn');
+          div.innerHTML = 'PAUSE';
           document.querySelector('.interfaceContainer').append(div);
           break;
         case 7:
@@ -64,6 +64,14 @@ class GemPuzzle {
         default:
       }
     }
+    const sideSelect = document.createElement('select');
+    sideSelect.setAttribute('id', 'side-select');
+    sideSelect.innerHTML ='  <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>';
+    document.querySelector('.interfaceContainer').prepend(sideSelect);
+    const sideSelectLabel = document.createElement('label');
+    sideSelectLabel.setAttribute('for', 'side-select');
+    sideSelectLabel.innerHTML = 'Chose field size: ';
+    document.querySelector('.interfaceContainer').prepend(sideSelectLabel);
   }
 
   createGems() {
@@ -100,6 +108,10 @@ class GemPuzzle {
     winModal.classList.add('winModal');
     winModal.classList.add('hidden');
     document.body.append(winModal);
+    const winModalMessage = document.createElement('div');
+    winModalMessage.classList.add('winModalMessage');
+    document.querySelector('.winModal').append(winModalMessage);
+
   }
 
   findRemovable() {
@@ -140,7 +152,7 @@ class GemPuzzle {
     this.setPosition(this.zero);
     this.setPosition(event.target);
     this.turnCount += 1;
-    document.querySelector('.turns-count').innerHTML = this.turnCount;
+    document.querySelector('.turns-count').innerHTML = `Turns: ${this.turnCount}`;
     this.checkWin();
   }
 
@@ -158,10 +170,9 @@ class GemPuzzle {
     } else {
       this.winnerName = prompt('Enter your name:');
       document.querySelector('.winModal').classList.remove('hidden');
-      document.querySelector('.winModal').innerHTML = `Congratulations, ${this.winnerName}! You win!<br>Your turns: ${this.turnCount}<br>Your time: ${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`;
+      document.querySelector('.winModalMessage').innerHTML = `Congratulations, ${this.winnerName}! You win!<br>Your turns: ${this.turnCount}<br>Your time: ${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds<br><br> Click to continue`;
       this.writeScore();
       this.gameStart = true;
-      this.pause();
     }
   }
 
@@ -189,7 +200,7 @@ class GemPuzzle {
       this.pause();
     }
     this.turnCount = 0;
-    document.querySelector('.turns-count').innerHTML = '0';
+    document.querySelector('.turns-count').innerHTML = 'Turns : 0';
     this.startTimer();
   }
 
@@ -225,6 +236,9 @@ class GemPuzzle {
     const save = document.querySelector('.saveBtn');
     const load = document.querySelector('.loadBtn');
     const score = document.querySelector('.scoreBtn');
+    const winModal = document.querySelector('.winModal');
+    const sideSelect = document.querySelector('#side-select');
+
     window.addEventListener('mousedown', (event) => {
       if (event.target === restart) {
         this.restart();
@@ -249,6 +263,21 @@ class GemPuzzle {
       if (event.target === score) {
         this.showScore();
       }
+
+      if (event.target === winModal) {
+        winModal.classList.add('hidden');
+      }
+    });
+
+    sideSelect.addEventListener('mousedown', (event)=>{
+      if (event.target.nodeName === 'OPTION') {
+        this.side = Number(event.target.value);
+        document.querySelectorAll('.gem').forEach(el=>{
+          el.remove();
+        });
+        this.createGems();
+        this.findRemovable();
+      }
     });
   }
 
@@ -257,50 +286,59 @@ class GemPuzzle {
       let positionList = [...document.querySelectorAll('.gem')];
       positionList = positionList.map((el) => ({
         id: el.getAttribute('id'),
-        data: el.getAttribute('data'),
-        style: el.style,
+        data: el.getAttribute('data')
       }));
       window.localStorage.setItem('positionList', JSON.stringify(positionList));
       window.localStorage.setItem('turns', this.turnCount);
       window.localStorage.setItem('time', this.timer);
+      window.localStorage.setItem('side', this.side);
     }
   }
 
   load() {
-    this.gameStart = false;
-    if (this.paused) {
-      this.pause();
+    if (window.localStorage.positionList) {
+      this.gameStart = false;
+      if (this.paused) {
+        this.pause();
+      }
+      this.resetTimer();
+      this.startTimer();
+      this.timer = Number(window.localStorage.time);
+      document.querySelector('.timer').innerHTML = `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`;
+      this.turnCount = Number(window.localStorage.turns);
+      document.querySelector('.turns-count').innerHTML = this.turnCount;
+      document.querySelectorAll('.gem').forEach((el) => {
+        el.remove();
+      });
+      this.side = window.localStorage.side;
+      const positionList = JSON.parse(window.localStorage.positionList);
+      positionList.forEach((el, i) => {
+        const gem = document.createElement('div');
+        gem.classList.add('gem');
+        gem.setAttribute('data', el.data);
+        if (i !== this.side ** 2 - 1) {
+          gem.innerHTML = `<span>${i + 1}</span>`;
+        } else {
+          gem.innerHTML = '<span></span>';
+        }
+        if (i !== this.side ** 2 - 1) {
+          gem.setAttribute('id', el.id);
+        } else {
+          gem.setAttribute('id', 'zero');
+        }
+        gem.style.width = `${100 / this.side - 1}%`;
+        gem.style.height = `${100 / this.side - 1}%`;
+        this.setPosition(gem);
+        document.querySelector('.square').append(gem);
+      });
+      this.findRemovable();
+      document.querySelectorAll('option').forEach(item=>{
+        item.selected = false;
+        if (item.value == this.side) {
+          item.selected = true;
+        }
+      })
     }
-    this.resetTimer();
-    this.startTimer();
-    this.timer = Number(window.localStorage.time);
-    document.querySelector('.timer').innerHTML = `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`;
-    this.turnCount = Number(window.localStorage.turns);
-    document.querySelector('.turns-count').innerHTML = this.turnCount;
-    document.querySelectorAll('.gem').forEach((el) => {
-      el.remove();
-    });
-    const positionList = JSON.parse(window.localStorage.positionList);
-    positionList.forEach((el, i) => {
-      const gem = document.createElement('div');
-      gem.classList.add('gem');
-      gem.setAttribute('data', el.data);
-      if (i !== this.side ** 2 - 1) {
-        gem.innerHTML = `<span>${i + 1}</span>`;
-      } else {
-        gem.innerHTML = '<span></span>';
-      }
-      if (i !== this.side ** 2 - 1) {
-        gem.setAttribute('id', el.id);
-      } else {
-        gem.setAttribute('id', 'zero');
-      }
-      gem.style.width = `${100 / this.side - 1}%`;
-      gem.style.height = `${100 / this.side - 1}%`;
-      this.setPosition(gem);
-      document.querySelector('.square').append(gem);
-    });
-    this.findRemovable();
   }
 
   showScore() {
@@ -312,26 +350,23 @@ class GemPuzzle {
   }
 
   writeScore() {
-    if (!window.localStorage.score) {
-      window.localStorage.score = JSON.stringify({
-        1: {
-          name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
-        },
-      });
-    } else {
-      const scoreLocal = JSON.parse(window.localStorage.score);
-      const keyMax = Math.max.apply(null, Object.keys(scoreLocal));
-      scoreLocal[keyMax + 1] = {
-        [keyMax + 1]: {
-          name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
-        },
-      };
-      window.localStorage.score = JSON.stringify(scoreLocal);
-    }
+
+   if (!window.localStorage.score) {
+    let localScore = {1: {name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,}}
+    window.localStorage.setItem('score', JSON.stringify(localScore));
+   } else {
+     let localScore = JSON.parse(window.localStorage.score);
+    let keyMax = Math.max.apply(null, Object.keys(localScore));
+     localScore[keyMax+1] = {name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,};
+     Object.keys(localScore).sort((a,b)=>{
+      return localScore[b].turns - localScore[a].turns;
+     });
+     window.localStorage.setItem('score', JSON.stringify(localScore));
+   }
   }
 }
 
-const gemGame = new GemPuzzle(3);
+const gemGame = new GemPuzzle();
 GemPuzzle.createField();
 gemGame.createGems();
 gemGame.createModal();
