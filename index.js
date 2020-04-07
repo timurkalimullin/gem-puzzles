@@ -35,10 +35,10 @@ class GemPuzzle {
           div.classList.add('turns-count');
           div.innerHTML = 'Turns : 0';
           document.querySelector('.interfaceContainer').append(div);
-        break;
+          break;
         case 5:
           div.classList.add('restartBtn');
-          div.innerHTML = 'RESTART';
+          div.innerHTML = 'START/RESTART';
           document.querySelector('.interfaceContainer').append(div);
           break;
         case 6:
@@ -66,7 +66,7 @@ class GemPuzzle {
     }
     const sideSelect = document.createElement('select');
     sideSelect.setAttribute('id', 'side-select');
-    sideSelect.innerHTML ='  <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>';
+    sideSelect.innerHTML = '  <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>';
     document.querySelector('.interfaceContainer').prepend(sideSelect);
     const sideSelectLabel = document.createElement('label');
     sideSelectLabel.setAttribute('for', 'side-select');
@@ -112,6 +112,13 @@ class GemPuzzle {
     winModalMessage.classList.add('winModalMessage');
     document.querySelector('.winModal').append(winModalMessage);
 
+    const scoreModal = document.createElement('div');
+    scoreModal.classList.add('scoreModal');
+    scoreModal.classList.add('hidden');
+    document.body.append(scoreModal);
+    const scoreModalMessage = document.createElement('div');
+    scoreModalMessage.classList.add('scoreModalMessage');
+    document.querySelector('.scoreModal').append(scoreModalMessage);
   }
 
   findRemovable() {
@@ -168,16 +175,16 @@ class GemPuzzle {
     if (this.checker !== (this.side ** 2) - 1) {
       this.checker = 0;
     } else {
-      this.winnerName = prompt('Enter your name:');
+      this.winnerName = prompt('Enter your name:') || 'Mr.Incognito';
       document.querySelector('.winModal').classList.remove('hidden');
-      document.querySelector('.winModalMessage').innerHTML = `Congratulations, ${this.winnerName}! You win!<br>Your turns: ${this.turnCount}<br>Your time: ${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds<br><br> Click to continue`;
+      document.querySelector('.winModalMessage').innerHTML = `Congratulations, ${this.winnerName || 'Mr.Incognito'}! You win!<br>Your turns: ${this.turnCount}<br>Your time: ${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds<br><br> Click to continue!`;
       this.writeScore();
       this.gameStart = true;
     }
   }
 
   shuffleGems() {
-    for (let i = 1; i <= this.side ** 3; i += 1) {
+    for (let i = 1; i <= 1000; i += 1) {
       let removableGems = [];
       document.querySelectorAll('.moveable').forEach((item) => {
         removableGems.push(item);
@@ -237,6 +244,7 @@ class GemPuzzle {
     const load = document.querySelector('.loadBtn');
     const score = document.querySelector('.scoreBtn');
     const winModal = document.querySelector('.winModal');
+    const scoreModal = document.querySelector('.scoreModal');
     const sideSelect = document.querySelector('#side-select');
 
     window.addEventListener('mousedown', (event) => {
@@ -267,16 +275,22 @@ class GemPuzzle {
       if (event.target === winModal) {
         winModal.classList.add('hidden');
       }
+
+      if (event.target === scoreModal || event.target === document.querySelector('.scoreModalMessage')) {
+        scoreModal.classList.add('hidden');
+      }
     });
 
-    sideSelect.addEventListener('mousedown', (event)=>{
+    sideSelect.addEventListener('mousedown', (event) => {
       if (event.target.nodeName === 'OPTION') {
         this.side = Number(event.target.value);
-        document.querySelectorAll('.gem').forEach(el=>{
+        document.querySelectorAll('.gem').forEach((el) => {
           el.remove();
         });
         this.createGems();
         this.findRemovable();
+        document.querySelector('.timer').innerHTML = '0 minutes 0 seconds';
+        document.querySelector('.turns-count').innerHTML = 'Turns: 0';
       }
     });
   }
@@ -286,7 +300,7 @@ class GemPuzzle {
       let positionList = [...document.querySelectorAll('.gem')];
       positionList = positionList.map((el) => ({
         id: el.getAttribute('id'),
-        data: el.getAttribute('data')
+        data: el.getAttribute('data'),
       }));
       window.localStorage.setItem('positionList', JSON.stringify(positionList));
       window.localStorage.setItem('turns', this.turnCount);
@@ -332,37 +346,46 @@ class GemPuzzle {
         document.querySelector('.square').append(gem);
       });
       this.findRemovable();
-      document.querySelectorAll('option').forEach(item=>{
+      document.querySelectorAll('option').forEach((item) => {
         item.selected = false;
         if (item.value == this.side) {
           item.selected = true;
         }
-      })
+      });
     }
   }
 
   showScore() {
     if (!window.localStorage.score) {
-      alert('No data yet!');
+      document.querySelector('.scoreModalMessage').innerHTML = `No score yet!<br> Click to continue!`;
     } else {
-      alert(window.localStorage.score);
+      const scoreModal = document.querySelector('.scoreModal');
+      scoreModal.classList.remove('hidden');
+      const score = JSON.parse(window.localStorage.score);
+      let scoreString = '';
+      for (const key in score) {
+        scoreString += `Name: ${score[key].name}, turns: ${score[key].turns}, time: ${score[key].time}<br><br>`;
+      }
+      document.querySelector('.scoreModalMessage').innerHTML = `${scoreString}<br> Click to continue!`;
     }
   }
 
   writeScore() {
-
-   if (!window.localStorage.score) {
-    let localScore = {1: {name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,}}
-    window.localStorage.setItem('score', JSON.stringify(localScore));
-   } else {
-     let localScore = JSON.parse(window.localStorage.score);
-    let keyMax = Math.max.apply(null, Object.keys(localScore));
-     localScore[keyMax+1] = {name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,};
-     Object.keys(localScore).sort((a,b)=>{
-      return localScore[b].turns - localScore[a].turns;
-     });
-     window.localStorage.setItem('score', JSON.stringify(localScore));
-   }
+    if (!window.localStorage.score) {
+      const localScore = {
+        1: {
+          name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
+        },
+      };
+      window.localStorage.setItem('score', JSON.stringify(localScore));
+    } else {
+      const localScore = JSON.parse(window.localStorage.score);
+      const keyMax = Math.max.apply(null, Object.keys(localScore));
+      localScore[keyMax + 1] = {
+        name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
+      };
+      window.localStorage.setItem('score', JSON.stringify(localScore));
+    }
   }
 }
 
