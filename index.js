@@ -1,6 +1,6 @@
 class GemPuzzle {
   constructor() {
-    this.side = 3;
+    this.side = 4;
     this.zero = null;
     this.turnCount = 0;
     this.checker = 0;
@@ -66,7 +66,7 @@ class GemPuzzle {
     }
     const sideSelect = document.createElement('select');
     sideSelect.setAttribute('id', 'side-select');
-    sideSelect.innerHTML = '  <option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>';
+    sideSelect.innerHTML = '  <option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>';
     document.querySelector('.interfaceContainer').prepend(sideSelect);
     const sideSelectLabel = document.createElement('label');
     sideSelectLabel.setAttribute('for', 'side-select');
@@ -95,6 +95,7 @@ class GemPuzzle {
       }
     }
     this.gameStart = true;
+    document.querySelector('.startModal').classList.remove('hidden');
   }
 
   createModal() {
@@ -103,6 +104,12 @@ class GemPuzzle {
     pauseModal.classList.add('hidden');
     pauseModal.innerHTML = 'PAUSE';
     document.querySelector('.square').append(pauseModal);
+
+    const startModal = document.createElement('div');
+    startModal.classList.add('startModal');
+    startModal.classList.add('hidden');
+    startModal.innerHTML = 'PRESS START';
+    document.querySelector('.square').append(startModal);
 
     const winModal = document.createElement('div');
     winModal.classList.add('winModal');
@@ -175,10 +182,12 @@ class GemPuzzle {
     if (this.checker !== (this.side ** 2) - 1) {
       this.checker = 0;
     } else {
+      this.checker = 0;
       this.winnerName = prompt('Enter your name:') || 'Mr.Incognito';
       document.querySelector('.winModal').classList.remove('hidden');
       document.querySelector('.winModalMessage').innerHTML = `Congratulations, ${this.winnerName || 'Mr.Incognito'}! You win!<br>Your turns: ${this.turnCount}<br>Your time: ${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds<br><br> Click to continue!`;
       this.writeScore();
+      document.querySelector('.startModal').classList.remove('hidden');
       this.gameStart = true;
     }
   }
@@ -199,6 +208,7 @@ class GemPuzzle {
   }
 
   restart() {
+    document.querySelector('.startModal').classList.add('hidden');
     this.resetTimer();
     this.shuffleGems();
     this.findRemovable();
@@ -276,22 +286,23 @@ class GemPuzzle {
         winModal.classList.add('hidden');
       }
 
-      if (event.target === scoreModal || event.target === document.querySelector('.scoreModalMessage')) {
+      if (event.target === scoreModal) {
         scoreModal.classList.add('hidden');
       }
     });
 
-    sideSelect.addEventListener('mousedown', (event) => {
-      if (event.target.nodeName === 'OPTION') {
-        this.side = Number(event.target.value);
-        document.querySelectorAll('.gem').forEach((el) => {
-          el.remove();
-        });
-        this.createGems();
-        this.findRemovable();
-        document.querySelector('.timer').innerHTML = '0 minutes 0 seconds';
-        document.querySelector('.turns-count').innerHTML = 'Turns: 0';
+    sideSelect.addEventListener('change', (event) => {
+      this.side = sideSelect.value;
+      document.querySelectorAll('.gem').forEach((el) => {
+        el.remove();
+      });
+      if (this.paused) {
+        this.pause();
       }
+      this.createGems();
+      this.findRemovable();
+      document.querySelector('.timer').innerHTML = '0 minutes 0 seconds';
+      document.querySelector('.turns-count').innerHTML = 'Turns: 0';
     });
   }
 
@@ -306,6 +317,10 @@ class GemPuzzle {
       window.localStorage.setItem('turns', this.turnCount);
       window.localStorage.setItem('time', this.timer);
       window.localStorage.setItem('side', this.side);
+    } else {
+      const scoreModal = document.querySelector('.scoreModal');
+      scoreModal.classList.remove('hidden');
+      document.querySelector('.scoreModalMessage').innerHTML = 'Bro, start the game, nothing to save here';
     }
   }
 
@@ -324,6 +339,7 @@ class GemPuzzle {
       document.querySelectorAll('.gem').forEach((el) => {
         el.remove();
       });
+      document.querySelector('.startModal').classList.add('hidden');
       this.side = window.localStorage.side;
       const positionList = JSON.parse(window.localStorage.positionList);
       positionList.forEach((el, i) => {
@@ -348,25 +364,29 @@ class GemPuzzle {
       this.findRemovable();
       document.querySelectorAll('option').forEach((item) => {
         item.selected = false;
-        if (item.value == this.side) {
+        if (item.value === this.side) {
           item.selected = true;
         }
       });
+    } else {
+      const scoreModal = document.querySelector('.scoreModal');
+      scoreModal.classList.remove('hidden');
+      document.querySelector('.scoreModalMessage').innerHTML = 'No saves yet!<br> Click to continue!';
     }
   }
 
   showScore() {
+    const scoreModal = document.querySelector('.scoreModal');
+    scoreModal.classList.remove('hidden');
     if (!window.localStorage.score) {
-      document.querySelector('.scoreModalMessage').innerHTML = `No score yet!<br> Click to continue!`;
+      document.querySelector('.scoreModalMessage').innerHTML = 'No score yet!<br> Click to continue!';
     } else {
-      const scoreModal = document.querySelector('.scoreModal');
-      scoreModal.classList.remove('hidden');
       const score = JSON.parse(window.localStorage.score);
       let scoreString = '';
       for (const key in score) {
-        scoreString += `Name: ${score[key].name}, turns: ${score[key].turns}, time: ${score[key].time}<br><br>`;
+        scoreString += `Name: ${score[key].name}, game: ${score[key].gems_number}x${score[key].gems_number}, turns: ${score[key].turns}, time: ${score[key].time}<br><br>`;
       }
-      document.querySelector('.scoreModalMessage').innerHTML = `${scoreString}<br> Click to continue!`;
+      document.querySelector('.scoreModalMessage').innerHTML = `Top 10 score<br><br>${scoreString}<br> Click to continue!`;
     }
   }
 
@@ -384,14 +404,26 @@ class GemPuzzle {
       localScore[keyMax + 1] = {
         name: this.winnerName, turns: `${this.turnCount}`, time: `${parseInt(this.timer / 60, 10)} minutes ${this.timer % 60} seconds`, realSec: this.timer, gems_number: this.side,
       };
-      window.localStorage.setItem('score', JSON.stringify(localScore));
+      const temp = [];
+      for (const i in localScore) {
+        temp.push(localScore[i]);
+      }
+      temp.sort((a, b) => a.turns - b.turns);
+      if (temp.length>10) {
+        temp.splice(9,1);
+      }
+      window.localStorage.setItem('score', JSON.stringify(temp));
     }
+  }
+
+  init() {
+    GemPuzzle.createField();
+    this.createModal();
+    this.createGems();
+    this.findRemovable();
+    this.listeners();
   }
 }
 
 const gemGame = new GemPuzzle();
-GemPuzzle.createField();
-gemGame.createGems();
-gemGame.createModal();
-gemGame.findRemovable();
-gemGame.listeners();
+gemGame.init();
